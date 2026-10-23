@@ -15,6 +15,7 @@ import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.ItemContainerChanged;
 import net.runelite.client.Notifier;
+import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
@@ -46,6 +47,7 @@ public class ForestersRationPlugin extends Plugin
     private int pendingSyncTicks;
 
     @Inject private Client client;
+    @Inject private ClientThread clientThread;
     @Inject private ConfigManager configManager;
     @Inject private ForestersRationConfig config;
     @Inject private InfoBoxManager infoBoxManager;
@@ -84,8 +86,13 @@ public class ForestersRationPlugin extends Plugin
         {
             kitRemaining = -1;
         }
-        readContainers();
-        refreshDisplay();
+        // Plugin startup runs on the plugin executor, while client state and
+        // container access must happen on the client thread.
+        clientThread.invoke(() ->
+        {
+            readContainers();
+            refreshDisplay();
+        });
     }
 
     @Override
